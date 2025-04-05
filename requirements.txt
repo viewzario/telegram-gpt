@@ -1,0 +1,4 @@
+flask
+telebot
+openai
+python-dotenv
