@@ -81,7 +81,10 @@ def handle_message(message):
     response = messages.data[0].content[0].text.value
 
     # Отправляем в Telegram
+    try:
     bot.send_message(chat_id, response)
+except Exception as e:
+    print(f"❌ Ошибка при отправке сообщения в Telegram: {e}")
 
 # Flask-сервер для UptimeRobot
 app = Flask('')
