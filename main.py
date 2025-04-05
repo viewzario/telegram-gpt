@@ -41,8 +41,7 @@ client = OpenAI(
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 # Чат -> thread_id
-chat_to_thread_id = {}
-chat_to_run_id = {}
+
 
 # Создаём ассистента один раз
 
