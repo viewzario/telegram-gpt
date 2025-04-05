@@ -5,6 +5,18 @@ from openai import OpenAI
 from openai._types import NOT_GIVEN 
 from flask import Flask
 from threading import Thread
+import json
+
+# === Загрузка данных из файла ===
+if os.path.exists("data.json"):
+    with open("data.json", "r") as f:
+        data = json.load(f)
+        chat_to_thread_id = data.get("chat_to_thread_id", {})
+        chat_to_run_id = data.get("chat_to_run_id", {})
+else:
+    chat_to_thread_id = {}
+    chat_to_run_id = {}
+
 
 # Настройка логов
 logging.basicConfig(level=logging.INFO)
@@ -36,6 +48,12 @@ chat_to_run_id = {}
 
 assistant_id = "asst_heHB29G3R8fmhgedCGVoafxo"
 
+def save_data():
+    with open("data.json", "w") as f:
+        json.dump({
+            "chat_to_thread_id": chat_to_thread_id,
+            "chat_to_run_id": chat_to_run_id
+        }, f)
 
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
@@ -49,6 +67,7 @@ def handle_message(message):
         thread = client.beta.threads.create()
         chat_to_thread_id[chat_id] = thread.id
         print(f"🧵 Создан новый thread: {thread.id}")
+        save_data()
 
     thread_id = chat_to_thread_id[chat_id]
 
@@ -80,6 +99,7 @@ def handle_message(message):
 
     # Сохраняем run_id для пользователя
     chat_to_run_id[chat_id] = run.id
+    save_data()
 
     # Ждём завершения run
     while True:
