@@ -36,12 +36,6 @@ chat_to_thread_id = {}
 assistant_id = "asst_heHB29G3R8fmhgedCGVoafxo"
 
 
-@bot.message_handler(commands=['start'])
-def start(message):
-    print("🔔 Получена команда /start")
-    bot.reply_to(message, "Привет! Я GPT-бот. Напиши мне что-нибудь 🤖")
-
-
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     chat_id = str(message.chat.id)
@@ -67,7 +61,7 @@ def handle_message(message):
     # Запускаем run
     run = client.beta.threads.runs.create(
         thread_id=thread_id,
-        assistant_id= "asst_heHB29G3R8fmhgedCGVoafxo"
+        assistant_id=assistant_id
     )
 
     # Ожидаем завершения run
@@ -80,11 +74,11 @@ def handle_message(message):
     messages = client.beta.threads.messages.list(thread_id=thread_id)
     response = messages.data[0].content[0].text.value
 
-    # Отправляем в Telegram
+    # Отправляем в Telegram с защитой
     try:
-    bot.send_message(chat_id, response)
-except Exception as e:
-    print(f"❌ Ошибка при отправке сообщения в Telegram: {e}")
+        bot.send_message(chat_id, response)
+    except Exception as e:
+        print(f"❌ Ошибка при отправке сообщения в Telegram: {e}")
 
 # Flask-сервер для UptimeRobot
 app = Flask('')
