@@ -30,6 +30,7 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 # Чат -> thread_id
 chat_to_thread_id = {}
+chat_to_run_id = {}
 
 # Создаём ассистента один раз
 
@@ -51,6 +52,19 @@ def handle_message(message):
 
     thread_id = chat_to_thread_id[chat_id]
 
+    # ⏳ Проверка: есть ли активный run?
+    if chat_id in chat_to_run_id:
+        current_run = client.beta.threads.runs.retrieve(
+            thread_id=thread_id,
+            run_id=chat_to_run_id[chat_id]
+        )
+        if current_run.status in ["queued", "in_progress"]:
+            try:
+                bot.send_message(chat_id, "⏳ Подожди, я ещё думаю над предыдущим сообщением...")
+            except Exception as e:
+                print(f"❌ Ошибка при отправке предупреждения: {e}")
+            return
+
     # Отправляем сообщение в OpenAI
     client.beta.threads.messages.create(
         thread_id=thread_id,
@@ -64,7 +78,10 @@ def handle_message(message):
         assistant_id=assistant_id
     )
 
-    # Ожидаем завершения run
+    # Сохраняем run_id для пользователя
+    chat_to_run_id[chat_id] = run.id
+
+    # Ждём завершения run
     while True:
         run = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run.id)
         if run.status == "completed":
@@ -74,7 +91,7 @@ def handle_message(message):
     messages = client.beta.threads.messages.list(thread_id=thread_id)
     response = messages.data[0].content[0].text.value
 
-    # Отправляем в Telegram с защитой
+    # Отправляем ответ в Telegram
     try:
         bot.send_message(chat_id, response)
     except Exception as e:
